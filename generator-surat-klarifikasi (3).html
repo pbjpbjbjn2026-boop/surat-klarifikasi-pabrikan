@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Generator Surat Klarifikasi - UKPBJ Bojonegoro</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+  :root {
+    --navy: #1a2744;
+    --gold: #c9952a;
+    --cream: #faf8f3;
+    --light: #f0ede4;
+    --border: #d8d2c4;
+    --text: #2d2d2d;
+    --muted: #7a7060;
+    --success: #2d6a4f;
+    --white: #ffffff;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--cream);
+    color: var(--text);
+    min-height: 100vh;
+  }
+  header {
+    background: var(--navy);
+    padding: 28px 40px;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    border-bottom: 4px solid var(--gold);
+  }
+  .header-icon {
+    width: 52px; height: 52px;
+    background: var(--gold);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 24px; flex-shrink: 0;
+  }
+  header h1 {
+    font-family: 'Playfair Display', serif;
+    color: var(--white);
+    font-size: 22px;
+    line-height: 1.2;
+  }
+  header p { color: #a8b4cc; font-size: 13px; margin-top: 4px; }
+
+  .layout {
+    display: grid;
+    grid-template-columns: 440px 1fr;
+    min-height: calc(100vh - 96px);
+  }
+
+  /* FORM PANEL */
+  .form-panel {
+    background: var(--white);
+    border-right: 1px solid var(--border);
+    padding: 32px 28px;
+    overflow-y: auto;
+    max-height: calc(100vh - 96px);
+  }
+  .form-panel h2 {
+    font-family: 'Playfair Display', serif;
+    font-size: 17px;
+    color: var(--navy);
+    margin-bottom: 24px;
+    padding-bottom: 12px;
+    border-bottom: 2px solid var(--gold);
+  }
+  .field { margin-bottom: 18px; }
+  label {
+    display: block;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+  input, select, textarea {
+    width: 100%;
+    padding: 10px 14px;
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    color: var(--text);
+    background: var(--cream);
+    transition: border-color 0.2s, background 0.2s;
+    outline: none;
+  }
+  input:focus, select:focus, textarea:focus {
+    border-color: var(--navy);
+    background: var(--white);
+  }
+  textarea { resize: vertical; min-height: 60px; }
+
+  .divider {
+    margin: 24px 0 18px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--gold);
+    display: flex; align-items: center; gap: 10px;
+  }
+  .divider::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+  /* Tender rows */
+  .tender-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr 28px;
+    gap: 8px;
+    margin-bottom: 8px;
+    align-items: start;
+  }
+  .tender-row input { font-size: 13px; }
+  .btn-remove {
+    width: 28px; height: 36px; margin-top: 0;
+    background: #fee2e2; border: none; border-radius: 6px;
+    color: #b91c1c; cursor: pointer; font-size: 15px;
+    display: flex; align-items: center; justify-content: center;
+    transition: background 0.15s;
+    flex-shrink: 0;
+  }
+  .btn-remove:hover { background: #fca5a5; }
+  .btn-add {
+    background: none;
+    border: 1.5px dashed var(--border);
+    border-radius: 8px;
+    padding: 8px;
+    width: 100%;
+    font-size: 13px;
+    color: var(--muted);
+    cursor: pointer;
+    margin-top: 4px;
+    transition: border-color 0.2s, color 0.2s;
+  }
+  .btn-add:hover { border-color: var(--navy); color: var(--navy); }
+
+  .btn-generate {
+    background: var(--navy);
+    color: var(--white);
+    border: none;
+    border-radius: 10px;
+    padding: 14px 24px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    width: 100%;
+    margin-top: 28px;
+    transition: background 0.2s, transform 0.1s;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+  }
+  .btn-generate:hover { background: #253460; transform: translateY(-1px); }
+  .btn-generate:active { transform: translateY(0); }
+
+  /* PREVIEW PANEL */
+  .preview-panel {
+    padding: 32px 40px;
+    overflow-y: auto;
+    max-height: calc(100vh - 96px);
+    background: var(--light);
+  }
+  .preview-panel h2 {
+    font-family: 'Playfair Display', serif;
+    font-size: 17px;
+    color: var(--navy);
+    margin-bottom: 20px;
+    padding-bottom: 12px;
+    border-bottom: 2px solid var(--gold);
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .btn-download {
+    background: var(--gold);
+    color: var(--white);
+    border: none;
+    border-radius: 8px;
+    padding: 8px 18px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: 'DM Sans', sans-serif;
+    display: flex; align-items: center; gap: 6px;
+    transition: background 0.2s;
+  }
+  .btn-download:hover { background: #b8841e; }
+  .btn-download:disabled { background: #ccc; cursor: default; }
+
+  /* Letter paper */
+  .letter {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 48px 52px;
+    max-width: 720px;
+    margin: 0 auto;
+    font-family: 'Times New Roman', serif;
+    font-size: 14px;
+    line-height: 1.7;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.07);
+    position: relative;
+  }
+  .letter-header {
+    text-align: center;
+    border-bottom: 3px double #333;
+    padding-bottom: 16px;
+    margin-bottom: 24px;
+  }
+  .letter-header-text { text-align: center; }
+  .letter-header-text .org { font-size: 13px; font-weight: bold; font-family: 'Arial', sans-serif; }
+  .letter-header-text .address { font-size: 11px; color: #555; font-family: 'Arial', sans-serif; }
+  .letter-meta { margin-bottom: 20px; font-family: 'Arial', sans-serif; font-size: 13px; }
+  .letter-meta table { border-collapse: collapse; }
+  .letter-meta td { padding: 1px 0; vertical-align: top; }
+  .letter-meta td:first-child { width: 80px; }
+  .letter-meta td:nth-child(2) { width: 20px; text-align: center; }
+  .letter-title { margin: 20px 0 24px; font-family: 'Arial', sans-serif; font-size: 13px; }
+  .letter-body { font-family: 'Arial', sans-serif; font-size: 13px; line-height: 1.8; text-align: justify; }
+  .letter-body p { margin-bottom: 12px; text-indent: 40px; }
+  .letter-table { width: 100%; border-collapse: collapse; margin: 12px 0; font-size: 13px; }
+  .letter-table th, .letter-table td {
+    border: 1px solid #333;
+    padding: 6px 12px;
+    text-align: center;
+    font-family: 'Arial', sans-serif;
+  }
+  .letter-table th { background: #f0f0f0; font-weight: bold; }
+  .letter-footer { margin-top: 32px; text-align: center; font-family: 'Arial', sans-serif; font-size: 13px; }
+  .placeholder { color: #b45309; background: #fef3c7; padding: 0 3px; border-radius: 3px; }
+
+  @media (max-width: 900px) {
+    .layout { grid-template-columns: 1fr; }
+    .form-panel, .preview-panel { max-height: none; }
+    header { padding: 20px; }
+    .letter { padding: 28px 24px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-icon">📋</div>
+  <div>
+    <h1>Generator Surat Klarifikasi Kerjasama Material</h1>
+    <p>UKPBJ Kabupaten Bojonegoro — Isi form, preview, lalu download</p>
+  </div>
+</header>
+
+<div class="layout">
+  <!-- FORM -->
+  <div class="form-panel">
+    <h2>📝 Isi Data Surat</h2>
+
+    <div class="divider">Informasi Dasar</div>
+    <div class="field">
+      <label>Tanggal</label>
+      <input type="date" id="tanggal">
+    </div>
+    <div class="field">
+      <label>No Paket</label>
+      <input type="text" id="noPaket" placeholder="contoh: 001">
+    </div>
+
+    <div class="divider">Tujuan & Pabrikan</div>
+    <div class="field">
+      <label>Tujuan Surat (Dukungan / Perjanjian / dll)</label>
+      <input type="text" id="tujuan" placeholder="contoh: Dukungan">
+    </div>
+    <div class="field">
+      <label>Nama Pabrikan / Produsen</label>
+      <input type="text" id="namaPabrikan" placeholder="contoh: PT. Semen Indonesia">
+    </div>
+
+    <div class="divider">Detail Pekerjaan</div>
+    <div class="field">
+      <label>Jenis Bahan / Material</label>
+      <input type="text" id="bahan" placeholder="contoh: Aspal, Baja Tulangan, dll">
+    </div>
+    <div class="field">
+      <label>Nama Paket Pekerjaan</label>
+      <textarea id="namaPaket" placeholder="contoh: Pembangunan Jalan Raya..."></textarea>
+    </div>
+
+    <div class="divider">Peserta Tender</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 28px;gap:8px;margin-bottom:4px;">
+      <label style="margin:0;font-size:11px;">Nama Peserta</label>
+      <label style="margin:0;font-size:11px;">No. Surat</label>
+      <div></div>
+    </div>
+    <div id="tenderRows"></div>
+    <button class="btn-add" onclick="addTenderRow()">+ Tambah Peserta Tender</button>
+
+    <button class="btn-generate" onclick="generateLetter()">
+      👁️ Preview & Generate Surat
+    </button>
+  </div>
+
+  <!-- PREVIEW -->
+  <div class="preview-panel">
+    <h2>
+      Pratinjau Surat
+      <button class="btn-download" id="btnDownload" onclick="downloadPDF()" disabled>
+        ⬇ Download PDF
+      </button>
+    </h2>
+    <div id="letterPreview">
+      <div style="text-align:center;padding:80px 40px;color:var(--muted);">
+        <div style="font-size:48px;margin-bottom:16px;">📄</div>
+        <p style="font-size:15px;">Isi form di sebelah kiri,<br>lalu klik <strong>Preview & Generate Surat</strong></p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+let tenderCount = 0;
+
+function addTenderRow(nama='', noSurat='') {
+  tenderCount++;
+  const id = tenderCount;
+  const div = document.createElement('div');
+  div.className = 'tender-row';
+  div.id = 'row-' + id;
+  div.innerHTML = `
+    <input type="text" placeholder="Nama perusahaan" value="${nama}" id="tn-${id}">
+    <input type="text" placeholder="No. surat" value="${noSurat}" id="ts-${id}">
+    <button class="btn-remove" onclick="removeTenderRow(${id})">×</button>
+  `;
+  document.getElementById('tenderRows').appendChild(div);
+}
+
+function removeTenderRow(id) {
+  const el = document.getElementById('row-' + id);
+  if (el) el.remove();
+}
+
+function getTenderData() {
+  const rows = document.querySelectorAll('.tender-row');
+  const data = [];
+  rows.forEach(row => {
+    const inputs = row.querySelectorAll('input');
+    if (inputs[0].value.trim() || inputs[1].value.trim()) {
+      data.push({ nama: inputs[0].value.trim(), noSurat: inputs[1].value.trim() });
+    }
+  });
+  return data;
+}
+
+function formatTanggal(val) {
+  if (!val) return '...........';
+  const d = new Date(val);
+  const bulan = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
+  return d.getDate() + ' ' + bulan[d.getMonth()] + ' ' + d.getFullYear();
+}
+
+function ph(val, label) {
+  return val ? val : `<span class="placeholder">[${label}]</span>`;
+}
+
+function generateLetter() {
+  const tanggal = formatTanggal(document.getElementById('tanggal').value);
+  const noPaket = document.getElementById('noPaket').value.trim();
+  const tujuan = document.getElementById('tujuan').value.trim();
+  const namaPabrikan = document.getElementById('namaPabrikan').value.trim();
+  const bahan = document.getElementById('bahan').value.trim();
+  const namaPaket = document.getElementById('namaPaket').value.trim();
+  const tenderData = getTenderData();
+
+  const nomorSurat = `000.3/ ${noPaket || '...'} / KLA.B / 412.023 / 2026`;
+
+  let tenderRows = '';
+  if (tenderData.length === 0) {
+    tenderRows = `<tr><td colspan="2" style="color:#aaa;font-style:italic;text-align:center;">Belum ada peserta</td></tr>`;
+  } else {
+    tenderData.forEach(r => {
+      tenderRows += `<tr><td>${r.nama || '-'}</td><td>${r.noSurat || '-'}</td></tr>`;
+    });
+  }
+
+  document.getElementById('letterPreview').innerHTML = `
+    <div class="letter">
+      <div class="letter-header">
+        <div class="letter-header-text">
+          <div class="org">UNIT KERJA PENGADAAN BARANG/JASA</div>
+          <div class="org">KABUPATEN BOJONEGORO</div>
+          <div class="org">KELOMPOK KERJA PEMILIHAN</div>
+          <div class="address">Jl. P. Mas Tumapel No.1 <strong>BOJONEGORO</strong></div>
+        </div>
+      </div>
+
+      <div style="text-align:right;margin-bottom:20px;font-family:Arial,sans-serif;font-size:13px;">
+        Bojonegoro, ${tanggal}
+      </div>
+
+      <div class="letter-meta">
+        <table>
+          <tr><td>No</td><td>:</td><td>${nomorSurat}</td></tr>
+          <tr><td>Sifat</td><td>:</td><td>Penting</td></tr>
+          <tr><td>Lampiran</td><td>:</td><td>-</td></tr>
+          <tr><td>Perihal</td><td>:</td><td>Klarifikasi Surat ${ph(tujuan,'Tujuan')} Kerjasama Material</td></tr>
+        </table>
+      </div>
+
+      <div class="letter-title">
+        Yth. Direktur<br>
+        <strong>${ph(namaPabrikan,'Nama Pabrikan')}</strong><br>
+        di Tempat
+      </div>
+
+      <div class="letter-body">
+        <p>Bersama ini kami mohon bantuan Saudara terkait klarifikasi keabsahan Surat ${ph(tujuan,'Tujuan')} Kerjasama Material ${ph(bahan,'Bahan')} dari untuk paket pekerjaan ${ph(namaPaket,'Nama Paket')} di Kabupaten Bojonegoro Tahun Anggaran 2026. Berikut ini kami sampaikan data peserta tender yang melampirkan Surat ${ph(tujuan,'Tujuan')} Kerjasama Material ${ph(bahan,'Bahan')} dari ${ph(namaPabrikan,'Nama Pabrikan')}, yaitu:</p>
+      </div>
+
+      <table class="letter-table">
+        <thead><tr><th>Nama Peserta Tender</th><th>No Surat</th></tr></thead>
+        <tbody>${tenderRows}</tbody>
+      </table>
+
+      <div class="letter-body" style="margin-top:16px;">
+        <p>Apakah benar ${ph(namaPabrikan,'Nama Pabrikan')} telah menerbitkan Surat ${ph(tujuan,'Tujuan')} Kerjasama Material ${ph(bahan,'Bahan')} kepada peserta tender sebagaimana tercantum di atas?</p>
+        <p style="text-indent:40px;">Atas perhatian dan klarifikasi yang diberikan, kami ucapkan terima kasih.</p>
+      </div>
+
+      <div class="letter-footer">
+        <br><br>
+        POKJA PEMILIHAN<br>
+        UKPBJ KABUPATEN BOJONEGORO<br>
+        <br><br><br><br>
+        ttd
+      </div>
+    </div>
+  `;
+
+  document.getElementById('btnDownload').disabled = false;
+
+  // Store data for download
+  window._letterData = { tanggal, noPaket, tujuan, namaPabrikan, bahan, namaPaket, tenderData, tanggalRaw: document.getElementById('tanggal').value };
+}
+
+function downloadPDF() {
+  const d = window._letterData;
+  if (!d) return;
+
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ unit: 'mm', format: 'a4' });
+
+  const pageW = 210;
+  const marginL = 25, marginR = 25;
+  const contentW = pageW - marginL - marginR;
+  let y = 20;
+
+  const font = 'times';
+  const fontSz = 11;
+
+  // Helper: wrapped text, returns new Y
+  function wrapText(text, x, startY, maxW, lineH, align) {
+    const lines = doc.splitTextToSize(text, maxW);
+    lines.forEach(line => {
+      if (align === 'center') doc.text(line, pageW / 2, startY, { align: 'center' });
+      else if (align === 'right') doc.text(line, x + maxW, startY, { align: 'right' });
+      else doc.text(line, x, startY);
+      startY += lineH;
+    });
+    return startY;
+  }
+
+  // ── HEADER ──
+  doc.setFont(font, 'bold');
+  doc.setFontSize(12);
+  y = wrapText('UNIT KERJA PENGADAAN BARANG/JASA', marginL, y, contentW, 6, 'center');
+  y = wrapText('KABUPATEN BOJONEGORO', marginL, y, contentW, 6, 'center');
+  y = wrapText('KELOMPOK KERJA PEMILIHAN', marginL, y, contentW, 6, 'center');
+  doc.setFont(font, 'normal');
+  doc.setFontSize(10);
+  y = wrapText('Jl. P. Mas Tumapel No.1  BOJONEGORO', marginL, y, contentW, 5, 'center');
+  y += 2;
+  // double line
+  doc.setLineWidth(0.8); doc.line(marginL, y, pageW - marginR, y); y += 1;
+  doc.setLineWidth(0.3); doc.line(marginL, y, pageW - marginR, y); y += 6;
+
+  // ── DATE right ──
+  doc.setFont(font, 'normal');
+  doc.setFontSize(fontSz);
+  doc.text(`Bojonegoro, ${d.tanggal}`, pageW - marginR, y, { align: 'right' });
+  y += 8;
+
+  // ── META ──
+  const col1 = marginL, col2 = marginL + 28, col3 = marginL + 33;
+  const lineH = 6;
+  const meta = [
+    ['No', `000.3/ ${d.noPaket || '...'} / KLA.B / 412.023 / 2026`],
+    ['Sifat', 'Penting'],
+    ['Lampiran', '-'],
+    ['Perihal', `Klarifikasi Surat ${d.tujuan || '[Tujuan]'} Kerjasama Material`],
+  ];
+  meta.forEach(([k, v]) => {
+    doc.text(k, col1, y);
+    doc.text(':', col2, y);
+    const lines = doc.splitTextToSize(v, contentW - 33);
+    lines.forEach((line, i) => doc.text(line, col3, y + i * lineH));
+    y += lines.length * lineH;
+  });
+  y += 6;
+
+  // ── TO ──
+  doc.text('Yth. Direktur', col1, y); y += lineH;
+  doc.setFont(font, 'bold');
+  doc.text(d.namaPabrikan || '[Nama Pabrikan]', col1, y); y += lineH;
+  doc.setFont(font, 'normal');
+  doc.text('di Tempat', col1, y); y += lineH * 2;
+
+  // ── BODY paragraph 1 ──
+  const body1 = `Bersama ini kami mohon bantuan Saudara terkait klarifikasi keabsahan Surat ${d.tujuan || '[Tujuan]'} Kerjasama Material ${d.bahan || '[Bahan]'} dari untuk paket pekerjaan ${d.namaPaket || '[Nama Paket]'} di Kabupaten Bojonegoro Tahun Anggaran 2026. Berikut ini kami sampaikan data peserta tender yang melampirkan Surat ${d.tujuan || '[Tujuan]'} Kerjasama Material ${d.bahan || '[Bahan]'} dari ${d.namaPabrikan || '[Nama Pabrikan]'}, yaitu:`;
+  const indentX = col1 + 10;
+  const indentW = contentW - 10;
+  const b1lines = doc.splitTextToSize(body1, indentW);
+  b1lines.forEach(line => { doc.text(line, indentX, y); y += 5.5; });
+  y += 3;
+
+  // ── TABLE ──
+  const colW1 = contentW * 0.6, colW2 = contentW * 0.4;
+  const tRows = d.tenderData.length ? d.tenderData : [{ nama: '', noSurat: '' }];
+  const rowH = 8;
+  // header row
+  doc.setFillColor(240, 240, 240);
+  doc.rect(marginL, y, colW1, rowH, 'FD');
+  doc.rect(marginL + colW1, y, colW2, rowH, 'FD');
+  doc.setFont(font, 'bold');
+  doc.text('Nama Peserta Tender', marginL + colW1 / 2, y + 5.5, { align: 'center' });
+  doc.text('No Surat', marginL + colW1 + colW2 / 2, y + 5.5, { align: 'center' });
+  y += rowH;
+  doc.setFont(font, 'normal');
+  tRows.forEach(r => {
+    doc.rect(marginL, y, colW1, rowH);
+    doc.rect(marginL + colW1, y, colW2, rowH);
+    doc.text(r.nama || '-', marginL + colW1 / 2, y + 5.5, { align: 'center' });
+    doc.text(r.noSurat || '-', marginL + colW1 + colW2 / 2, y + 5.5, { align: 'center' });
+    y += rowH;
+  });
+  y += 5;
+
+  // ── BODY paragraph 2 ──
+  const body2 = `Apakah benar ${d.namaPabrikan || '[Nama Pabrikan]'} telah menerbitkan Surat ${d.tujuan || '[Tujuan]'} Kerjasama Material ${d.bahan || '[Bahan]'} kepada peserta tender sebagaimana tercantum di atas?`;
+  const b2lines = doc.splitTextToSize(body2, indentW);
+  b2lines.forEach(line => { doc.text(line, indentX, y); y += 5.5; });
+  y += 5;
+  const b3lines = doc.splitTextToSize('Atas perhatian dan klarifikasi yang diberikan, kami ucapkan terima kasih.', indentW);
+  b3lines.forEach(line => { doc.text(line, indentX, y); y += 5.5; });
+  y += 12;
+
+  // ── FOOTER ──
+  const cx = pageW / 2;
+  doc.setFont(font, 'bold');
+  doc.text('POKJA PEMILIHAN', cx, y, { align: 'center' }); y += 6;
+  doc.text('UKPBJ KABUPATEN BOJONEGORO', cx, y, { align: 'center' }); y += 24;
+  doc.setFont(font, 'normal');
+  doc.text('ttd', cx, y, { align: 'center' });
+
+  const filename = `Surat_Klarifikasi_${(d.namaPabrikan || 'Pabrikan').replace(/\s+/g,'_')}_${d.tanggalRaw || 'tanggal'}.pdf`;
+  doc.save(filename);
+}
+
+// Init with one tender row
+addTenderRow();
+</script>
+</body>
+</html>
